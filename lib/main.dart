@@ -1,9 +1,20 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:test_app/home_page.dart';
+import 'package:test_app/person.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    // ドキュメントの翻訳
+    // プロバイダは[MyApp]の内部ではなく、その上に配置されます。
+    // プロバイダをモックしながら、[MyApp] を使うことができます。
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => PersonModel()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -17,65 +28,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.indigo,
       ),
-      home: MyHomePage(),
+      home: const HomePage(),
     );
-  }
-}
-
-class MyHomePage extends StatelessWidget {
-  // const MyHomePage({Key? key}) : super(key: key);
-  // ユーザーというコレクションを定義
-  List<Map<String, dynamic>> allUser = [];
-
-  // ユーザーのデータをAPIから取得するメソッド
-  Future getAllUser() async {
-    try {
-      var response = await http.get(Uri.parse("https://reqres.in/api/users"));
-      List data = (json.decode(response.body)
-      as Map<String, dynamic>)["data"]; // MapでString, dynamic型に変換
-      data.forEach((element) {
-        allUser.add(element);
-      });
-
-      print(allUser);
-    } catch (e) {
-      print("例外処理が発生");
-      print(e);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text("Future Builder"),
-        ),
-        body: FutureBuilder(
-          // ListViewをBuilderでラップしてFutureBuilderに書き換える
-            future: getAllUser(),
-            builder: (context, snapshot) {
-              //, snapshotを追加
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                // 読み間でいるWidgetを表示
-                return Center(
-                  child: Text("LOADING ...."),
-                );
-              } else {
-                return ListView.builder(
-                    itemCount: allUser.length, // Listのデータを数える
-                    itemBuilder: (context, index) => ListTile(
-                      // CircleAvatarはイメージと画像を丸くしてくれる。
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.grey[300],
-                        // コンソールのjsonのデータのavatarを表示
-                        backgroundImage: NetworkImage(allUser[index]['avatar']),
-                      ),
-                      // コンソールのjsonのデータのfirst_nameとlast_nameを表示
-                      title: Text("${allUser[index]['first_name']} ${allUser[index]['last_name']}"),
-                      // コンソールのjsonのデータのemailを表示
-                      subtitle: Text("${allUser[index]['email']}"),
-                    ));
-              }
-            }));
   }
 }
