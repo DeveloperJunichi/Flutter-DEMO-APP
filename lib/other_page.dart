@@ -30,6 +30,7 @@ class Other extends StatelessWidget {
               Text("List型の変数の０番目${c.list[0]}"),
               Text("List型の変数の1番目${c.list[1]}"),
               Text("List型の変数の2番目${c.list[2]}"),
+              ElevatedButton(onPressed: () => Get.back(), child: Text("戻るボタン"))
             ],
           ),
         )));
