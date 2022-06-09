@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:test_app/counter_model.dart';
-// ChangeNotifierProviderを使ったカウンターアプリ
+import 'package:get/get.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+import 'package:get/route_manager.dart';
+
+import 'other_page.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -11,52 +15,43 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    // MaterialAppをGetMaterialAppに変更する
+    return GetMaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      // ChangeNotifierProviderでMyHomePageをラップして、Providerを使えるようにする
-      home: ChangeNotifierProvider<CounterModel>(
-        create: (context) => CounterModel(),
-          child: const MyHomePage()),
+      home: Home(),
     );
   }
 }
-// StatelessWidgetは状態を持たないので、画面を作るだけ。ロジックはProviderを使って呼び出す。
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+
+class Home extends StatelessWidget {
 
   @override
-  Widget build(BuildContext context) {
-    // Providerをこのページで呼び出すために書く変数。
-    final countModel = Provider.of<CounterModel>(context);
+  Widget build(context) {
+
+    // Get.put()を使ってクラスをインスタンス化することですべての子Routeで利用できるようになります。
+    final Controller c = Get.put(Controller());
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Providerを使ったカンターアプリ"),
-      ),
-      body: Center(
-        child: Container(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // ここで、Provider.of<CounterModel>(context).countと書かれていて、他のページから状態をもった変数を呼び出す。
-              Text('カウンター変数${countModel.count}', style: TextStyle(fontSize: 20),)
-            ],
-          ),
-        ),
-      ),
-      // 画面右下のプラスボタン
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // ここで、Provider.of<CounterModel>(context).countAdd();と書かれていて、他のページから状態をもった関数を呼び出す。
-          countModel.countAdd();
-        },
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
+      // countが変わるたびにTextを更新するにはObx(()=>)を使ってください。
+        appBar: AppBar(title: Obx(() => Text("Clicks: ${c.count}"))),
+
+        // 8行使っていたNavigator.pushの代わりに短い Get.to()を使ってください。context不要です。
+        body: Center(child: ElevatedButton(
+          // Otherページへ画面遷移するコード
+            child: Text("Go to Other"), onPressed: () => Get.to(Other()))),
+        // 数字が増えるボタンのコード
+        floatingActionButton:
+        FloatingActionButton(child: Icon(Icons.add), onPressed: c.increment));
   }
 }
 
+class Controller extends GetxController{
+  var count = 0.obs;
+  var name = '田中太郎'.obs;
+  final list = ['apple', 'orange', 'grape'];
+  increment() => count++;
+}
 
