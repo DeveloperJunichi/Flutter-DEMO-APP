@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
-import 'package:get/get_state_manager/src/simple/get_controllers.dart';
-import 'package:get/route_manager.dart';
-
-import 'other_page.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+// 公式の英語のコメントを翻訳しております
+// riverpodで実装したカウンタ例
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    // ProviderScopeを追加することで、プロジェクト全体でRiverpodを有効にすることができます。
+    const ProviderScope(child: MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -15,43 +15,31 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // MaterialAppをGetMaterialAppに変更する
-    return GetMaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return MaterialApp(home: Home());
+  }
+}
+
+/// プロバイダはグローバルに宣言され、状態を作成する方法を指定します。
+final counterProvider = StateProvider((ref) => 0);
+
+class Home extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Counter example')),
+      body: Center(
+        // Consumerは、プロバイダを読み込むことができるウィジェットです。
+        // flutter_hooksを使用している場合は、フック "useProvider" を使用することもできます。
+        child: Consumer(builder: (context, watch, _) {
+          final count = watch(counterProvider).state;
+          return Text('$count');
+        }),
       ),
-      home: Home(),
+      floatingActionButton: FloatingActionButton(
+        // read メソッドは、プロバイダをリッスンせずに読み込むためのユーティリティです
+        onPressed: () => context.read(counterProvider).state++,
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
-
-class Home extends StatelessWidget {
-
-  @override
-  Widget build(context) {
-
-    // Get.put()を使ってクラスをインスタンス化することですべての子Routeで利用できるようになります。
-    final Controller c = Get.put(Controller());
-
-    return Scaffold(
-      // countが変わるたびにTextを更新するにはObx(()=>)を使ってください。
-        appBar: AppBar(title: Obx(() => Text("Clicks: ${c.count}"))),
-
-        // 8行使っていたNavigator.pushの代わりに短い Get.to()を使ってください。context不要です。
-        body: Center(child: ElevatedButton(
-          // Otherページへ画面遷移するコード
-            child: Text("Go to Other"), onPressed: () => Get.to(Other()))),
-        // 数字が増えるボタンのコード
-        floatingActionButton:
-        FloatingActionButton(child: Icon(Icons.add), onPressed: c.increment));
-  }
-}
-
-class Controller extends GetxController{
-  var count = 0.obs;
-  var name = '田中太郎'.obs;
-  final list = ['apple', 'orange', 'grape'];
-  increment() => count++;
-}
-
